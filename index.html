@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Love Calculator</title>
+  <style>
+    :root{ --bg:#0f1724; --card:#0b1220; --accent:#ff5c8a; --muted:#94a3b8; }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071024 0%, #07122a 60%);color:#e6f0ff;display:flex;align-items:center;justify-content:center;padding:16px;position:relative}
+    .logo{position:absolute;top:16px;left:16px;width:60px;cursor:pointer;}
+    .card{width:100%;max-width:420px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:24px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.7);display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+    h1{margin:0 0 6px;font-size:22px;text-align:center}
+    p.lead{margin:0 0 12px;color:var(--muted);text-align:center;font-size:14px}
+    .inputs{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+    .inputs input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:15px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+    button.primary{background:linear-gradient(90deg,var(--accent),#ff7bb3);border:none;padding:10px 14px;border-radius:10px;color:#051023;font-weight:700;cursor:pointer;flex:1;min-width:90px}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;flex:1;min-width:90px}
+    .result{margin-top:20px;display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;--deg:0deg}
+    .meter{height:120px;width:120px;border-radius:999px;background:conic-gradient(var(--accent) 0deg,var(--accent) var(--deg), rgba(255,255,255,0.06) var(--deg), rgba(255,255,255,0.02) 360deg);display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+    .meter .num{font-size:22px;font-weight:800;color:#051023;background:#fff;padding:8px 12px;border-radius:999px;animation:heartbeat 1.3s infinite}
+    .details h3{margin:0 0 6px;font-size:18px}
+    .details p{margin:0;color:var(--muted);font-size:14px}
+    .hearts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+    .heart{width:18px;height:18px;display:inline-block;background-image:radial-gradient(circle at 30% 30%,#fff 8px,transparent 9px);transform:rotate(-45deg);border-radius:4px;position:relative}
+    .heart:before,.heart:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%}
+    .heart:before{left:-9px;top:0}
+    .heart:after{left:0;top:-9px}
+    .sparkle{position:absolute;width:14px;height:14px;background:red;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);animation:fall 3s linear forwards;pointer-events:none;}
+    @keyframes fall{0%{transform:translateY(0) scale(1);}100%{transform:translateY(300px) scale(0);opacity:0;}}
+    .pop-image{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);max-width:80%;max-height:80%;z-index:999;display:none;border-radius:0px;box-shadow: none;}
+    .share{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .note{margin-top:12px;color:var(--muted);font-size:13px}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+
+    @keyframes heartbeat{0%{transform:scale(1);} 30%{transform:scale(1.25);} 60%{transform:scale(1);} }
+    @media (max-width:520px){
+      .result{grid-template-columns:1fr;grid-auto-rows:auto;justify-items:center;}
+      .meter{margin:0 auto}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <a href="#" class="logo">
+    <img src="logo.png" alt="Love CalC Logo" style="width:100%;height:auto;">
+  </a>
+
+  <!-- Pop-up Image -->
+  <img src="pic.png" id="popPic" class="pop-image">
+
+  <main class="card" role="main">
+    <h1>Love Calculator 💕</h1>
+    <p class="lead">Type two names and press <strong>Calculate</strong>. This is just for fun!</p>
+
+    <div class="inputs">
+      <input id="nameA" placeholder="Your name" aria-label="First name" />
+      <input id="nameB" placeholder="Their name" aria-label="Second name" />
+    </div>
+
+    <div class="controls">
+      <button id="calcBtn" class="primary">Calculate</button>
+      <button id="randomBtn" class="ghost">Random</button>
+      <button id="clearBtn" class="ghost">Clear</button>
+    </div>
+
+    <div id="output" class="result" style="display:none;--deg:0deg">
+      <div class="meter" id="meter">
+        <div class="num" id="percent">0%</div>
+      </div>
+      <div class="details">
+        <h3 id="title">Friendly Match</h3>
+        <p id="message">Press calculate to see your result.</p>
+        <div class="hearts" id="hearts"></div>
+        <div class="share">
+          <button id="copyBtn" class="ghost">Copy result</button>
+          <button id="tweetBtn" class="ghost">Share (tweet)</button>
+        </div>
+        <div class="note">Results are generated for fun — enjoy!</div>
+      </div>
+    </div>
+
+    <footer>Made with ❤️ — Open in your browser</footer>
+  </main>
+
+  <script>
+    // ====== CONFIG ======
+    const SHEETDB_API_URL = "https://sheetdb.io/api/v1/xyg3j7ibg3cvu"; // <-- Paste your SheetDB API URL here
+
+    // ====== HELPER FUNCTIONS ======
+    function showResult(score, a, b){
+      const out=document.getElementById('output');
+      const title=document.getElementById('title');
+      const message=document.getElementById('message');
+      out.style.display='grid';
+      title.textContent=`${a} + ${b}`;
+      message.textContent=getMessage(score,a,b);
+      animateMeter(score);
+      renderHearts(score);
+    }
+
+    function computeScore(a, b){
+      if(!(a.trim()) || !(b.trim())) return 0;
+      const combo = a.toLowerCase() + '-' + b.toLowerCase();
+      if(combo==='naitik-arpana' || combo==='arpana-naitik'){
+        showPopPic();
+        return 100;
+      }
+      if((a.toLowerCase()==='prabhav' && b.toLowerCase()==='samikshya') ||
+         (b.toLowerCase()==='prabhav' && a.toLowerCase()==='samikshya')){
+        showHeartSparkles();
+        return 100;
+      }
+      if(a.toLowerCase()==='atul' || b.toLowerCase()==='atul'){
+        showPopPop();
+        return 0;
+      }
+      return Math.floor(Math.random()*101);
+    }
+
+    function getMessage(score,a,b){
+      if(score===0) return 'Please type both names.';
+      if(score>=90) return `Perfect match — ${a} & ${b}!`;
+      if(score>=75) return `Great chemistry!`;
+      if(score>=50) return `Nice vibes!`;
+      if(score>=30) return `Some sparks — work on it.`;
+      return `Hmm... maybe friends first.`;
+    }
+
+    function animateMeter(target){
+      const meter=document.getElementById('meter');
+      const percent=document.getElementById('percent');
+      let current=0;
+      let id=setInterval(()=>{
+        if(current>=target){clearInterval(id);current=target;}
+        percent.textContent=current+'%';
+        const deg=Math.round((current/100)*360);
+        meter.style.setProperty('--deg',deg+'deg');
+        current++;
+      },10);
+    }
+
+    function renderHearts(score){
+      const container=document.getElementById('hearts');
+      container.innerHTML='';
+      const full=Math.round(score/20);
+      for(let i=0;i<5;i++){
+        const el=document.createElement('span');
+        el.className='heart';
+        el.style.opacity=i<full?'1':'0.25';
+        container.appendChild(el);
+      }
+    }
+
+    function showPopPic(){
+      const img=document.getElementById('popPic');
+      img.style.display='block';
+      setTimeout(()=>{img.style.display='none';},3000);
+    }
+
+    function showHeartSparkles(){
+      for(let i=0;i<10;i++){
+        const spark=document.createElement('div');
+        spark.className='sparkle';
+        spark.style.left=Math.random()*90+'%';
+        spark.style.top=Math.random()*90+'%';
+        spark.style.background='red';
+        document.body.appendChild(spark);
+        setTimeout(()=>spark.remove(),5000);
+      }
+    }
+
+    function showPopPop(){
+      const pop=document.getElementById('popPic');
+      pop.src='pop.png';
+      pop.style.display='block';
+      setTimeout(()=>{
+        pop.style.display='none';
+        pop.src='pic.png';
+      },3000);
+    }
+
+    function sendToSheetDB(a, b, score){
+      if(!SHEETDB_API_URL) return;
+      const data = { Name1: a, Name2: b, Score: score, Timestamp: new Date().toISOString() };
+      fetch(SHEETDB_API_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
+      }).then(()=>console.log('Data sent to SheetDB'))
+        .catch(err=>console.error('Error sending data',err));
+    }
+
+    // ====== EVENTS ======
+    document.getElementById('calcBtn').onclick=()=>{
+      const a=document.getElementById('nameA').value;
+      const b=document.getElementById('nameB').value;
+      const score=computeScore(a,b);
+      showResult(score,a||'You',b||'Them');
+      sendToSheetDB(a||'You',b||'Them',score);
+    };
+
+    document.getElementById('randomBtn').onclick=()=>{
+      const boys=['Aarav','Rahul','Arjun','Prav','Nima','Naitik'];
+      const girls=['Anita','Riya','Maya','Sita','Sara','Arpana'];
+      const isBoyFirst=Math.random()<0.5;
+      const a=isBoyFirst?boys[Math.floor(Math.random()*boys.length)]:girls[Math.floor(Math.random()*girls.length)];
+      const b=isBoyFirst?girls[Math.floor(Math.random()*girls.length)]:boys[Math.floor(Math.random()*boys.length)];
+      document.getElementById('nameA').value=a;
+      document.getElementById('nameB').value=b;
+      const score=computeScore(a,b);
+      showResult(score,a,b);
+      sendToSheetDB(a,b,score);
+    };
+
+    document.getElementById('clearBtn').onclick=()=>{
+      document.getElementById('nameA').value='';
+      document.getElementById('nameB').value='';
+      document.getElementById('output').style.display='none';
+    };
+
+    document.getElementById('copyBtn').onclick=()=>{
+      const text=document.getElementById('percent').textContent;
+      navigator.clipboard.writeText(text);
+      alert('Copied!');
+    };
+
+    document.getElementById('tweetBtn').onclick=()=>{
+      const pct=document.getElementById('percent').textContent;
+      window.open(`https://twitter.com/intent/tweet?text=Love%20Score:%20${pct}`,'_blank');
+    };
+  </script>
+</body>
+</html>
